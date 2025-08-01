@@ -9,5 +9,12 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  server: {
+    host: true,
+    allowedHosts: true
+  },
+  optimizeDeps: {
+    include: ['react']
   }
 });
