@@ -5,12 +5,12 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/payment-web/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
     }
   },
+  base: '/payment-web/',
   server: {
     host: true,
     allowedHosts: true
