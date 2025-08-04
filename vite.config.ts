@@ -10,7 +10,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
-  base: '/payment-web/',
   server: {
     host: true,
     allowedHosts: true
