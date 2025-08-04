@@ -16,5 +16,8 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react']
+  },
+  build: {
+    sourcemap: false
   }
 });
