@@ -15,26 +15,29 @@ import { FaLock } from 'react-icons/fa';
 
 export default function CheckoutOrderView() {
   const [searchParams] = useSearchParams();
-  const stripeAccount = searchParams.get('paymentAccountId') ?? undefined;
 
-  const orderId = searchParams.get('orderId');
-  const accountId = searchParams.get('accountId');
-  const celebrityId = searchParams.get('celebrityId');
-  const paymentAccountId = searchParams.get('paymentAccountId');
-  const amount = searchParams.get('amount');
+  const stripePromise = loadStripe(
+    import.meta.env.VITE_STRIPE_PUBLIC_KEY || ''
+  );
 
-  if (!orderId || !accountId || !celebrityId || !paymentAccountId || !amount) {
+  const requiredParams = [
+    'orderId',
+    'accountId',
+    'celebrityId',
+    'paymentAccountId',
+    'baseAmount',
+    'cardRegion'
+  ];
+
+  const isInvalid = requiredParams.some(param => !searchParams.get(param));
+
+  if (isInvalid) {
     return (
       <div className='text-red-600 text-center mt-10'>
         Unable to process your request at this time.
       </div>
     );
   }
-
-  const stripePromise = loadStripe(
-    import.meta.env.VITE_STRIPE_PUBLIC_KEY || '',
-    { stripeAccount }
-  );
 
   return (
     <div className='w-screen min-h-screen flex flex-col items-center pt-4 bg-white'>
@@ -53,7 +56,6 @@ function CheckoutOrderContent() {
   const elements = useElements();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
   const [, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -68,11 +70,14 @@ function CheckoutOrderContent() {
       setLoading(true);
 
       const dto = {
-        orderId: searchParams.get('orderId'),
-        accountId: searchParams.get('accountId'),
-        celebrityId: searchParams.get('celebrityId'),
-        paymentAccountId: searchParams.get('paymentAccountId'),
-        amount: Number(searchParams.get('amount'))
+        orderId: searchParams.get('orderId')!,
+        accountId: searchParams.get('accountId')!,
+        celebrityId: searchParams.get('celebrityId')!,
+        paymentAccountId: searchParams.get('paymentAccountId')!,
+        baseAmount: Number(searchParams.get('baseAmount')),
+        cardRegion: searchParams.get('cardRegion') as 'eu' | 'intl',
+        discountPercent: Number(searchParams.get('discountPercent') ?? 0),
+        extras: JSON.parse(searchParams.get('extras') ?? '{}')
       };
 
       const { data } = await axios.post(
@@ -96,11 +101,10 @@ function CheckoutOrderContent() {
       } else {
         navigate('/checkout-success');
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
-      navigate('/checkout-error');
-
       alert('Erro ao processar pagamento');
+      navigate('/checkout-error');
     } finally {
       setLoading(false);
     }
@@ -152,7 +156,6 @@ function CheckoutOrderContent() {
         onClick={handleSubmit}
       >
         <FaLock size={16} />
-
         {content.payContent}
       </Button>
     </div>
