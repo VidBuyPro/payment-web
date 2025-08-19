@@ -56,18 +56,28 @@ function CheckoutOrderContent() {
   const elements = useElements();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = useCallback(async () => {
     const number = elements?.getElement(CardNumberElement);
     if (!stripe || !number) {
-      alert('Stripe não carregado corretamente');
+      alert('Payment system not load correct');
       return;
     }
 
     try {
       setLoading(true);
+
+      const pmRes = await stripe.createPaymentMethod({
+        type: 'card',
+        card: number
+      });
+
+      if (pmRes.error || !pmRes.paymentMethod?.id) {
+        throw new Error(
+          pmRes.error?.message || 'Failed to create payment method'
+        );
+      }
 
       const dto = {
         orderId: searchParams.get('orderId')!,
@@ -77,7 +87,8 @@ function CheckoutOrderContent() {
         baseAmount: Number(searchParams.get('baseAmount')),
         cardRegion: searchParams.get('cardRegion') as 'eu' | 'intl',
         discountPercent: Number(searchParams.get('discountPercent') ?? 0),
-        extras: JSON.parse(searchParams.get('extras') ?? '{}')
+        extras: JSON.parse(searchParams.get('extras') ?? '{}'),
+        paymentMethodId: pmRes.paymentMethod.id /* paymentMethodId */
       };
 
       const { data } = await axios.post(
@@ -90,9 +101,7 @@ function CheckoutOrderContent() {
         }
       );
 
-      setClientSecret(data.clientSecret);
-
-      const result = await stripe.confirmCardPayment(data.clientSecret, {
+      /* const result = await stripe.confirmCardPayment(data.clientSecret, {
         payment_method: { card: number }
       });
 
@@ -100,10 +109,20 @@ function CheckoutOrderContent() {
         alert(result.error.message);
       } else {
         navigate('/checkout-success');
+      } */
+
+      if (data?.status === 'requires_action' && data?.clientSecret) {
+        const result = await stripe.confirmCardPayment(data.clientSecret);
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
       }
+
+      navigate('/checkout-success');
     } catch (err) {
       console.error(err);
-      alert('Erro ao processar pagamento');
+      alert('Error processing payment');
+
       navigate('/checkout-error');
     } finally {
       setLoading(false);
