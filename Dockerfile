@@ -1,29 +1,17 @@
-FROM node:20-bullseye-slim AS builder
+FROM node:22.12.0
+
 WORKDIR /app
 
-RUN corepack enable && corepack prepare yarn@stable --activate
+RUN npm install -g corepack
 
 COPY package.json yarn.lock ./
 
-RUN yarn install --frozen-lockfile
+RUN yarn install
 
 COPY . .
+
 RUN yarn build
 
-RUN yarn install --production --ignore-scripts --prefer-offline
+EXPOSE 5173
 
-
-FROM node:20-bullseye-slim AS runner
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV PORT=4000
-
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
-
-EXPOSE 4000
-
-CMD ["node", "./node_modules/next/dist/bin/next", "start", "-p", "4000"]
+CMD ["yarn", "dev"]
