@@ -86,9 +86,8 @@ function CheckoutOrderContent() {
         paymentAccountId: searchParams.get('paymentAccountId')!,
         baseAmount: Number(searchParams.get('baseAmount')),
         cardRegion: searchParams.get('cardRegion') as 'eu' | 'intl',
-        discountPercent: Number(searchParams.get('discountPercent') ?? 0),
         extras: JSON.parse(searchParams.get('extras') ?? '{}'),
-        paymentMethodId: pmRes.paymentMethod.id /* paymentMethodId */
+        paymentMethodId: pmRes.paymentMethod.id
       };
 
       const { data } = await axios.post(
@@ -100,16 +99,6 @@ function CheckoutOrderContent() {
           }
         }
       );
-
-      /* const result = await stripe.confirmCardPayment(data.clientSecret, {
-        payment_method: { card: number }
-      });
-
-      if (result.error) {
-        alert(result.error.message);
-      } else {
-        navigate('/checkout-success');
-      } */
 
       if (data?.status === 'requires_action' && data?.clientSecret) {
         const result = await stripe.confirmCardPayment(data.clientSecret);
