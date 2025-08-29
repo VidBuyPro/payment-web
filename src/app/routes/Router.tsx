@@ -3,6 +3,7 @@ import { routes } from './routes.constant';
 import TestCheckoutWrapper from '@/views/TestCheckout/TestCheckout.view';
 import IntentSuccessView from '@/views/IntentSuccess/IntentSuccess.view';
 import CheckoutOrderView from '@/views/CheckoutOrder/CheckoutOrder.view';
+import CheckoutAdditionalPaymentView from '@/views/CheckoutAdditionalPayment/CheckoutAdditionalPayment.view';
 
 export function Router() {
   return (
@@ -10,12 +11,23 @@ export function Router() {
       <Routes>
         <Route
           path={routes.inital}
-          element={<>Ola</>}
+          element={
+            <>
+              <div className='text-blue-600 text-center mt-10'>
+                Unable to process your request at this time.
+              </div>
+            </>
+          }
         />
 
         <Route
           path={routes.checkoutOrder}
           element={<CheckoutOrderView />}
+        />
+
+        <Route
+          path={routes.additionalPayment}
+          element={<CheckoutAdditionalPaymentView />}
         />
 
         <Route
